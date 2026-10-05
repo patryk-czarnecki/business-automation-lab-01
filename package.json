@@ -1,0 +1,21 @@
+{
+  "name": "business-automation-lab-01",
+  "version": "1.0.0",
+  "description": "Learning project for business automation and system integrations",
+  "homepage": "https://github.com/patryk-czarnecki/business-automation-lab-01#readme",
+  "bugs": {
+    "url": "https://github.com/patryk-czarnecki/business-automation-lab-01/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patryk-czarnecki/business-automation-lab-01.git"
+  },
+  "license": "UNLICENSED",
+  "author": "Patryk Czarnecki",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true
+}
