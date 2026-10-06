@@ -13,7 +13,7 @@
   "license": "UNLICENSED",
   "author": "Patryk Czarnecki",
   "type": "module",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
