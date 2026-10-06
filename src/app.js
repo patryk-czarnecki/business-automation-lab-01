@@ -1,4 +1,5 @@
 import express from "express";
+import { orderSchema } from "./schemas/orderSchema.js";
 
 const app = express();
 
@@ -11,9 +12,18 @@ app.get("/health", (req, res) => {
 });
 
 app.post("/api/orders", (req, res) => {
-  const order = req.body;
+  const result = orderSchema.safeParse(req.body);
 
-  res.status(201).json({
+  if (!result.success) {
+    return res.status(400).json({
+      message: "Invalid order data",
+      errors: result.error.issues,
+    });
+  }
+
+  const order = result.data;
+
+  return res.status(201).json({
     message: "Order received",
     order: order,
   });
