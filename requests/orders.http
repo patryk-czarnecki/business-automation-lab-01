@@ -1,0 +1,29 @@
+### Health check
+
+GET http://localhost:3000/health
+
+### Create valid order
+
+POST http://localhost:3000/api/orders
+Content-Type: application/json
+
+{
+  "externalId": "ORDER-1002",
+  "customerName": "Example Company",
+  "customerEmail": "orders@example.com",
+  "amount": 999.99,
+  "currency": "PLN"
+}
+
+### Create invalid order
+
+POST http://localhost:3000/api/orders
+Content-Type: application/json
+
+{
+  "externalId": "",
+  "customerName": "",
+  "customerEmail": "to-nie-jest-email",
+  "amount": -500,
+  "currency": "ZIEMNIAK"
+}
