@@ -14,10 +14,21 @@ export const createOrder = async (req, res) => {
     });
   }
 
-  const order = await createOrderService(result.data);
+  try {
+    const order = await createOrderService(result.data);
 
-  return res.status(201).json({
-    message: "Order created",
-    order,
-  });
+    return res.status(201).json({
+      message: "Order created",
+      order,
+    });
+  } catch (error) {
+    if (error?.code === "P2002") {
+      return res.status(409).json({
+        message: "Order with this externalId already exists",
+        externalId: result.data.externalId,
+      });
+    }
+
+    throw error;
+  }
 };
