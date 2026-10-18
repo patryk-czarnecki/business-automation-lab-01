@@ -11,3 +11,30 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Currency {
+  PLN
+  EUR
+  USD
+}
+
+enum OrderStatus {
+  RECEIVED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  externalId    String      @unique
+  customerName  String
+  customerEmail String
+  amountCents   Int
+  currency      Currency
+  status        OrderStatus @default(RECEIVED)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("orders")
+}
