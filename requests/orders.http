@@ -27,3 +27,19 @@ Content-Type: application/json
   "amount": -500,
   "currency": "ZIEMNIAK"
 }
+
+### Get all orders
+
+GET http://localhost:3000/api/orders
+
+### Get order by ID
+
+GET http://localhost:3000/api/orders/1
+
+### Get nonexistent order
+
+GET http://localhost:3000/api/orders/999999
+
+### Get order with invalid ID
+
+GET http://localhost:3000/api/orders/abc

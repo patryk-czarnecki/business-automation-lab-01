@@ -55,3 +55,19 @@ export const createOrder = async (orderData) => {
     };
   }
 };
+
+export const getOrders = async () => {
+  return prisma.order.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};
+
+export const getOrderById = async (id) => {
+  return prisma.order.findUnique({
+    where: {
+      id,
+    },
+  });
+};
