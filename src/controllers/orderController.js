@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { orderSchema } from "../schemas/orderSchema.js";
+import { createOrder as createOrderService } from "../services/orderService.js";
 
-export const createOrder = (req, res) => {
+export const createOrder = async (req, res) => {
   const result = orderSchema.safeParse(req.body);
 
   if (!result.success) {
@@ -13,10 +14,10 @@ export const createOrder = (req, res) => {
     });
   }
 
-  const order = result.data;
+  const order = await createOrderService(result.data);
 
   return res.status(201).json({
-    message: "Order received",
-    order: order,
+    message: "Order created",
+    order,
   });
 };
