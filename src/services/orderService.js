@@ -71,3 +71,47 @@ export const getOrderById = async (id) => {
     },
   });
 };
+
+const allowedStatusTransitions = {
+  RECEIVED: ["PROCESSING"],
+  PROCESSING: ["COMPLETED", "FAILED"],
+  COMPLETED: [],
+  FAILED: ["PROCESSING"],
+};
+
+export const updateOrderStatus = async (id, newStatus) => {
+  const order = await prisma.order.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!order) {
+    return {
+      outcome: "not_found",
+    };
+  }
+
+  const allowedStatuses = allowedStatusTransitions[order.status];
+
+  if (!allowedStatuses.includes(newStatus)) {
+    return {
+      outcome: "invalid_transition",
+      order,
+    };
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: {
+      id,
+    },
+    data: {
+      status: newStatus,
+    },
+  });
+
+  return {
+    outcome: "updated",
+    order: updatedOrder,
+  };
+};

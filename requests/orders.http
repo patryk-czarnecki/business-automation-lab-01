@@ -43,3 +43,53 @@ GET http://localhost:3000/api/orders/999999
 ### Get order with invalid ID
 
 GET http://localhost:3000/api/orders/abc
+
+### Order status workflow
+# Set this to an existing order ID in RECEIVED status before running the workflow
+
+@statusOrderId = 4
+
+### Update order status: RECEIVED -> PROCESSING
+
+PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
+Content-Type: application/json
+
+{
+  "status": "PROCESSING"
+}
+
+### Update order status: PROCESSING -> COMPLETED
+
+PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
+Content-Type: application/json
+
+{
+  "status": "COMPLETED"
+}
+
+### Invalid transition: COMPLETED -> PROCESSING
+
+PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
+Content-Type: application/json
+
+{
+  "status": "PROCESSING"
+}
+
+### Invalid status
+
+PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
+Content-Type: application/json
+
+{
+  "status": "ZIEMNIAK"
+}
+
+### Update nonexistent order
+
+PATCH http://localhost:3000/api/orders/999999/status
+Content-Type: application/json
+
+{
+  "status": "PROCESSING"
+}

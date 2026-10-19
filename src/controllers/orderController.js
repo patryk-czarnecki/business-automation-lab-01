@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { orderSchema } from "../schemas/orderSchema.js";
+import { orderStatusSchema } from "../schemas/orderStatusSchema.js";
 import {
   createOrder as createOrderService,
   getOrders as getOrdersService,
   getOrderById as getOrderByIdService,
+  updateOrderStatus as updateOrderStatusService,
 } from "../services/orderService.js";
 
 export const createOrder = async (req, res) => {
@@ -67,5 +69,50 @@ export const getOrderById = async (req, res) => {
 
   return res.status(200).json({
     order,
+  });
+};
+
+export const updateOrderStatus = async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      message: "Invalid order ID",
+    });
+  }
+
+  const result = orderStatusSchema.safeParse(req.body);
+
+  if (!result.success) {
+    const validationErrors = z.flattenError(result.error);
+
+    return res.status(400).json({
+      message: "Invalid order status",
+      errors: validationErrors.fieldErrors,
+    });
+  }
+
+  const resultFromService = await updateOrderStatusService(
+    id,
+    result.data.status,
+  );
+
+  if (resultFromService.outcome === "not_found") {
+    return res.status(404).json({
+      message: "Order not found",
+    });
+  }
+
+  if (resultFromService.outcome === "invalid_transition") {
+    return res.status(409).json({
+      message: "Invalid order status transition",
+      currentStatus: resultFromService.order.status,
+      requestedStatus: result.data.status,
+    });
+  }
+
+  return res.status(200).json({
+    message: "Order status updated",
+    order: resultFromService.order,
   });
 };
