@@ -49,6 +49,13 @@ GET http://localhost:3000/api/orders/abc
 
 @statusOrderId = 4
 
+### Process order
+# Set this to an existing order ID in RECEIVED status before processing
+
+@processOrderId = 8
+
+POST http://localhost:3000/api/orders/{{processOrderId}}/process
+
 ### Update order status: RECEIVED -> PROCESSING
 
 PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status

@@ -6,6 +6,7 @@ import {
   getOrders as getOrdersService,
   getOrderById as getOrderByIdService,
   updateOrderStatus as updateOrderStatusService,
+  processOrder as processOrderService,
 } from "../services/orderService.js";
 
 export const createOrder = async (req, res) => {
@@ -114,5 +115,36 @@ export const updateOrderStatus = async (req, res) => {
   return res.status(200).json({
     message: "Order status updated",
     order: resultFromService.order,
+  });
+};
+
+export const processOrder = async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({
+      message: "Invalid order ID",
+    });
+  }
+
+  const resultFromService = await processOrderService(id);
+
+  if (resultFromService.outcome === "not_found") {
+    return res.status(404).json({
+      message: "Order not found",
+    });
+  }
+
+  if (resultFromService.outcome === "invalid_status") {
+    return res.status(409).json({
+      message: "Order cannot be processed in its current status",
+      currentStatus: resultFromService.order.status,
+    });
+  }
+
+  return res.status(200).json({
+    message: "Order processed successfully",
+    order: resultFromService.order,
+    integration: resultFromService.integration,
   });
 };

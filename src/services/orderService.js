@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { sendOrderToExternalSystem } from "./integrationService.js";
 
 const isSameOrder = (existingOrder, orderData, amountCents) => {
   return (
@@ -113,5 +114,52 @@ export const updateOrderStatus = async (id, newStatus) => {
   return {
     outcome: "updated",
     order: updatedOrder,
+  };
+};
+
+export const processOrder = async (id) => {
+  const order = await prisma.order.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!order) {
+    return {
+      outcome: "not_found",
+    };
+  }
+
+  if (order.status !== "RECEIVED") {
+    return {
+      outcome: "invalid_status",
+      order,
+    };
+  }
+
+  const processingOrder = await prisma.order.update({
+    where: {
+      id,
+    },
+    data: {
+      status: "PROCESSING",
+    },
+  });
+
+  const integrationResult = await sendOrderToExternalSystem(processingOrder);
+
+  const completedOrder = await prisma.order.update({
+    where: {
+      id,
+    },
+    data: {
+      status: "COMPLETED",
+    },
+  });
+
+  return {
+    outcome: "completed",
+    order: completedOrder,
+    integration: integrationResult,
   };
 };
