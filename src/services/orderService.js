@@ -146,7 +146,25 @@ export const processOrder = async (id) => {
     },
   });
 
-  const integrationResult = await sendOrderToExternalSystem(processingOrder);
+  let integrationResult;
+
+  try {
+    integrationResult = await sendOrderToExternalSystem(processingOrder);
+  } catch (error) {
+    const failedOrder = await prisma.order.update({
+      where: {
+        id,
+      },
+      data: {
+        status: "FAILED",
+      },
+    });
+
+    return {
+      outcome: "failed",
+      order: failedOrder,
+    };
+  }
 
   const completedOrder = await prisma.order.update({
     where: {

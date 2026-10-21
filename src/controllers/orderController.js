@@ -142,6 +142,13 @@ export const processOrder = async (req, res) => {
     });
   }
 
+  if (resultFromService.outcome === "failed") {
+    return res.status(502).json({
+      message: "External system failed to process the order",
+      order: resultFromService.order,
+    });
+  }
+
   return res.status(200).json({
     message: "Order processed successfully",
     order: resultFromService.order,
