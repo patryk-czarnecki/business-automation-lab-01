@@ -130,7 +130,9 @@ export const processOrder = async (id) => {
     };
   }
 
-  if (order.status !== "RECEIVED") {
+  const processableStatuses = ["RECEIVED", "FAILED"];
+
+  if (!processableStatuses.includes(order.status)) {
     return {
       outcome: "invalid_status",
       order,
