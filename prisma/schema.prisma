@@ -26,15 +26,36 @@ enum OrderStatus {
 }
 
 model Order {
-  id            Int         @id @default(autoincrement())
-  externalId    String      @unique
-  customerName  String
-  customerEmail String
-  amountCents   Int
-  currency      Currency
-  status        OrderStatus @default(RECEIVED)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                  Int                  @id @default(autoincrement())
+  externalId          String               @unique
+  customerName        String
+  customerEmail       String
+  amountCents         Int
+  currency            Currency
+  status              OrderStatus          @default(RECEIVED)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  integrationAttempts IntegrationAttempt[]
 
   @@map("orders")
+}
+
+enum IntegrationAttemptStatus {
+  STARTED
+  SUCCEEDED
+  FAILED
+}
+
+model IntegrationAttempt {
+  id                Int                      @id @default(autoincrement())
+  orderId           Int
+  order             Order                    @relation(fields: [orderId], references: [id])
+  status            IntegrationAttemptStatus @default(STARTED)
+  errorMessage      String?
+  externalReference String?
+  startedAt         DateTime                 @default(now())
+  finishedAt        DateTime?
+
+  @@index([orderId, startedAt])
+  @@map("integration_attempts")
 }

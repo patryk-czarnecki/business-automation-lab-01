@@ -148,11 +148,30 @@ export const processOrder = async (id) => {
     },
   });
 
+  const attempt = await prisma.integrationAttempt.create({
+    data: {
+      orderId: id,
+      status: "STARTED",
+    },
+  });
+
   let integrationResult;
 
   try {
     integrationResult = await sendOrderToExternalSystem(processingOrder);
   } catch (error) {
+    await prisma.integrationAttempt.update({
+      where: {
+        id: attempt.id,
+      },
+      data: {
+        status: "FAILED",
+        errorMessage:
+          error instanceof Error ? error.message : "Unknown integration error",
+        finishedAt: new Date(),
+      },
+    });
+
     const failedOrder = await prisma.order.update({
       where: {
         id,
@@ -167,6 +186,17 @@ export const processOrder = async (id) => {
       order: failedOrder,
     };
   }
+
+  await prisma.integrationAttempt.update({
+    where: {
+      id: attempt.id,
+    },
+    data: {
+      status: "SUCCEEDED",
+      externalReference: integrationResult.externalReference,
+      finishedAt: new Date(),
+    },
+  });
 
   const completedOrder = await prisma.order.update({
     where: {
