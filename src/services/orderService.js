@@ -139,21 +139,62 @@ export const processOrder = async (id) => {
     };
   }
 
-  const processingOrder = await prisma.order.update({
-    where: {
-      id,
-    },
-    data: {
-      status: "PROCESSING",
-    },
+  const claim = await prisma.$transaction(async (tx) => {
+    const claimResult = await tx.order.updateMany({
+      where: {
+        id,
+        status: {
+          in: processableStatuses,
+        },
+      },
+      data: {
+        status: "PROCESSING",
+      },
+    });
+
+    if (claimResult.count !== 1) {
+      return null;
+    }
+
+    const attempt = await tx.integrationAttempt.create({
+      data: {
+        orderId: id,
+        status: "STARTED",
+      },
+    });
+
+    const processingOrder = await tx.order.findUniqueOrThrow({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      processingOrder,
+      attempt,
+    };
   });
 
-  const attempt = await prisma.integrationAttempt.create({
-    data: {
-      orderId: id,
-      status: "STARTED",
-    },
-  });
+  if (!claim) {
+    const currentOrder = await prisma.order.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!currentOrder) {
+      return {
+        outcome: "not_found",
+      };
+    }
+
+    return {
+      outcome: "invalid_status",
+      order: currentOrder,
+    };
+  }
+
+  const { processingOrder, attempt } = claim;
 
   let integrationResult;
 
