@@ -160,26 +160,30 @@ export const processOrder = async (id) => {
   try {
     integrationResult = await sendOrderToExternalSystem(processingOrder);
   } catch (error) {
-    await prisma.integrationAttempt.update({
-      where: {
-        id: attempt.id,
-      },
-      data: {
-        status: "FAILED",
-        errorMessage:
-          error instanceof Error ? error.message : "Unknown integration error",
-        finishedAt: new Date(),
-      },
-    });
+    const [, failedOrder] = await prisma.$transaction([
+      prisma.integrationAttempt.update({
+        where: {
+          id: attempt.id,
+        },
+        data: {
+          status: "FAILED",
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : "Unknown integration error",
+          finishedAt: new Date(),
+        },
+      }),
 
-    const failedOrder = await prisma.order.update({
-      where: {
-        id,
-      },
-      data: {
-        status: "FAILED",
-      },
-    });
+      prisma.order.update({
+        where: {
+          id,
+        },
+        data: {
+          status: "FAILED",
+        },
+      }),
+    ]);
 
     return {
       outcome: "failed",
@@ -187,25 +191,27 @@ export const processOrder = async (id) => {
     };
   }
 
-  await prisma.integrationAttempt.update({
-    where: {
-      id: attempt.id,
-    },
-    data: {
-      status: "SUCCEEDED",
-      externalReference: integrationResult.externalReference,
-      finishedAt: new Date(),
-    },
-  });
+  const [, completedOrder] = await prisma.$transaction([
+    prisma.integrationAttempt.update({
+      where: {
+        id: attempt.id,
+      },
+      data: {
+        status: "SUCCEEDED",
+        externalReference: integrationResult.externalReference,
+        finishedAt: new Date(),
+      },
+    }),
 
-  const completedOrder = await prisma.order.update({
-    where: {
-      id,
-    },
-    data: {
-      status: "COMPLETED",
-    },
-  });
+    prisma.order.update({
+      where: {
+        id,
+      },
+      data: {
+        status: "COMPLETED",
+      },
+    }),
+  ]);
 
   return {
     outcome: "completed",
