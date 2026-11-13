@@ -34,7 +34,7 @@ GET http://localhost:3000/api/orders
 
 ### Get order by ID
 
-GET http://localhost:3000/api/orders/1
+GET http://localhost:3000/api/orders/17
 
 ### Get nonexistent order
 
@@ -44,11 +44,6 @@ GET http://localhost:3000/api/orders/999999
 
 GET http://localhost:3000/api/orders/abc
 
-### Order status workflow
-# Set this to an existing order ID in RECEIVED status before running the workflow
-
-@statusOrderId = 4
-
 ### Process order
 # Set this to an existing order ID in RECEIVED or FAILED status
 
@@ -56,47 +51,3 @@ GET http://localhost:3000/api/orders/abc
 
 POST http://localhost:3000/api/orders/{{processOrderId}}/process
 
-### Update order status: RECEIVED -> PROCESSING
-
-PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
-Content-Type: application/json
-
-{
-  "status": "PROCESSING"
-}
-
-### Update order status: PROCESSING -> COMPLETED
-
-PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
-Content-Type: application/json
-
-{
-  "status": "COMPLETED"
-}
-
-### Invalid transition: COMPLETED -> PROCESSING
-
-PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
-Content-Type: application/json
-
-{
-  "status": "PROCESSING"
-}
-
-### Invalid status
-
-PATCH http://localhost:3000/api/orders/{{statusOrderId}}/status
-Content-Type: application/json
-
-{
-  "status": "ZIEMNIAK"
-}
-
-### Update nonexistent order
-
-PATCH http://localhost:3000/api/orders/999999/status
-Content-Type: application/json
-
-{
-  "status": "PROCESSING"
-}
