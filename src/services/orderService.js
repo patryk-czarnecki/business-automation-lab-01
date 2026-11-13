@@ -78,7 +78,7 @@ export const getOrderById = async (id) => {
   });
 };
 
-export const processOrder = async (id) => {
+export const processOrder = async (id, { scheduled = false } = {}) => {
   const order = await prisma.order.findUnique({
     where: {
       id,
@@ -91,7 +91,7 @@ export const processOrder = async (id) => {
     };
   }
 
-  const processableStatuses = ["RECEIVED", "FAILED"];
+  const processableStatuses = scheduled ? ["FAILED"] : ["RECEIVED", "FAILED"];
 
   if (!processableStatuses.includes(order.status)) {
     return {
@@ -107,6 +107,11 @@ export const processOrder = async (id) => {
         status: {
           in: processableStatuses,
         },
+        ...(scheduled && {
+          nextRetryAt: {
+            lte: new Date(),
+          },
+        }),
       },
       data: {
         status: "PROCESSING",
