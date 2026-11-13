@@ -1,5 +1,10 @@
 import prisma from "../lib/prisma.js";
-import { sendOrderToExternalSystem } from "./integrationService.js";
+import {
+  sendOrderToExternalSystem,
+  IntegrationError,
+} from "./integrationService.js";
+
+import { calculateNextRetryAt } from "./retryPolicy.js";
 
 const isSameOrder = (existingOrder, orderData, amountCents) => {
   return (
@@ -157,8 +162,18 @@ export const processOrder = async (id) => {
   try {
     integrationResult = await sendOrderToExternalSystem(processingOrder);
   } catch (error) {
-    const [, failedOrder] = await prisma.$transaction([
-      prisma.integrationAttempt.update({
+    const failedOrder = await prisma.$transaction(async (tx) => {
+      const attemptNumber = await tx.integrationAttempt.count({
+        where: {
+          orderId: id,
+        },
+      });
+
+      const canRetry = error instanceof IntegrationError && error.retryable;
+
+      const nextRetryAt = canRetry ? calculateNextRetryAt(attemptNumber) : null;
+
+      await tx.integrationAttempt.update({
         where: {
           id: attempt.id,
         },
@@ -170,17 +185,18 @@ export const processOrder = async (id) => {
               : "Unknown integration error",
           finishedAt: new Date(),
         },
-      }),
+      });
 
-      prisma.order.update({
+      return tx.order.update({
         where: {
           id,
         },
         data: {
           status: "FAILED",
+          nextRetryAt,
         },
-      }),
-    ]);
+      });
+    });
 
     return {
       outcome: "failed",
@@ -206,6 +222,7 @@ export const processOrder = async (id) => {
       },
       data: {
         status: "COMPLETED",
+        nextRetryAt: null,
       },
     }),
   ]);

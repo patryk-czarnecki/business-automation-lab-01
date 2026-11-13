@@ -1,10 +1,18 @@
+export class IntegrationError extends Error {
+  constructor(message, retryable = false) {
+    super(message);
+    this.name = "IntegrationError";
+    this.retryable = retryable;
+  }
+}
+
 const failedOnceOrders = new Set();
 
 export const sendOrderToExternalSystem = async (order) => {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   if (order.externalId.endsWith("-FAIL")) {
-    throw new Error("External system rejected order");
+    throw new IntegrationError("External system rejected order", false);
   }
 
   if (
@@ -12,7 +20,8 @@ export const sendOrderToExternalSystem = async (order) => {
     !failedOnceOrders.has(order.externalId)
   ) {
     failedOnceOrders.add(order.externalId);
-    throw new Error("Temporary external system failure");
+
+    throw new IntegrationError("Temporary external system failure", true);
   }
 
   return {
